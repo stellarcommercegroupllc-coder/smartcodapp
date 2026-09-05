@@ -1,0 +1,54 @@
+# This file stores configurations for your Shopify app.
+
+# Learn more about configuring your app:
+# https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "REPLACE_WITH_YOUR_CLIENT_ID"
+name = "Smart COD"
+handle = "smart-cod"
+application_url = "https://REPLACE_WITH_YOUR_APP_URL.com"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = "REPLACE_WITH_YOUR_DEV_STORE.myshopify.com"
+
+[access_scopes]
+# Scopes needed:
+# - write_orders / read_orders: create COD draft orders
+# - write_draft_orders / read_draft_orders: build & convert draft orders
+# - read_products / read_product_listings: show product data on the form
+# - write_discounts: apply quantity-offer / bundle discounts
+scopes = "read_orders,write_orders,read_draft_orders,write_draft_orders,read_products,write_discounts,read_customers,write_customers,read_themes"
+
+[auth]
+redirect_urls = [
+  "https://REPLACE_WITH_YOUR_APP_URL.com/auth/callback",
+  "https://REPLACE_WITH_YOUR_APP_URL.com/auth/shopify/callback",
+  "https://REPLACE_WITH_YOUR_APP_URL.com/api/auth/callback"
+]
+
+[webhooks]
+api_version = "2024-10"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "/webhooks/app/uninstalled"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app_subscriptions/update" ]
+  uri = "/webhooks/app_subscriptions/update"
+
+  [[webhooks.subscriptions]]
+  topics = [ "orders/create" ]
+  uri = "/webhooks/orders/create"
+
+[pos]
+embedded = false
+
+[app_proxy]
+url = "https://REPLACE_WITH_YOUR_APP_URL.com/api"
+subpath = "cod"
+prefix = "apps"
+# With this config, a storefront request to /apps/cod/cod-submit
+# is proxied by Shopify to https://your-app-url.com/api/cod-submit
