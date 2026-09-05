@@ -1,0 +1,235 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // Vercel's serverless functions have an ephemeral filesystem — SQLite
+  // will not work there (nothing persists between invocations, and
+  // concurrent instances don't share a file). Point DATABASE_URL at a real
+  // hosted Postgres (Vercel Postgres, Neon, Supabase, Railway, etc.) for
+  // any deployment target other than local dev.
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- Required by @shopify/shopify-app-session-storage-prisma ---
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+}
+
+// --- Per-shop app settings ---
+model ShopSettings {
+  id                  String   @id @default(cuid())
+  shop                String   @unique
+  planName            String   @default("free") // free | premium | enterprise | unlimited
+  billingInterval     String   @default("annual") // monthly | annual
+  isActive            Boolean  @default(true)
+  onboardingCompleted Boolean  @default(false)
+
+  // ---- Form Designer ----
+  formTitle         String  @default("Complete your Cash on Delivery order")
+  primaryColor      String  @default("#1a1a1a")
+  buttonText        String  @default("Confirm Cash on Delivery Order")
+  formFieldsConfig  String? // JSON: [{key,label,enabled,required,sortOrder}]
+  showOnProductPage Boolean @default(true)
+  showOnCartPage    Boolean @default(true)
+  codFeeEnabled     Boolean @default(false)
+  codFeeAmount      Float   @default(0)
+  codFeeType        String  @default("fixed") // fixed | percentage
+
+  // ---- Sales Booster > Abandoned Cart ----
+  abandonedCartEnabled    Boolean @default(false)
+  abandonedCartDelayHours Int     @default(1)
+  abandonedCartMessage    String  @default("You left something in your cart! Complete your Cash on Delivery order now.")
+
+  // ---- Fraud Prevention > User Blocking ----
+  rateLimitEnabled    Boolean @default(false)
+  rateLimitHours      Int     @default(72)
+  maxQtyBlockEnabled  Boolean @default(false)
+  maxQtyBlockValue    Int     @default(10)
+  blockedEmails       String? // comma-separated
+  blockedPhoneNumbers String? // comma-separated
+  blockedIps          String? // comma-separated
+  allowedIps          String? // comma-separated, always allowed even if blocked elsewhere
+  blockedOrderMessage String  @default("We're unable to process this order.")
+  postalCodeMode      String  @default("none") // none | exclude | allow_only
+  postalCodes         String? // comma-separated
+
+  // ---- Fraud Prevention > User Verification ----
+  requirePhoneOtp   Boolean @default(false)
+  otpMessageText    String  @default("{{shop_name}} verification code: {{otp_code}}")
+  smsCreditsBalance Float   @default(1.0)
+
+  // ---- Fraud Prevention > Partial Payments ----
+  partialPaymentEnabled Boolean @default(false)
+
+  // ---- Delivery Success > Address Validation ----
+  addressAutocompleteEnabled Boolean @default(false)
+  addressValidationBalance   Float   @default(1.0)
+
+  // ---- Delivery Success > SMS/WhatsApp ----
+  messagingChannel               String  @default("sms") // sms | whatsapp
+  orderConfirmationSmsEnabled    Boolean @default(false)
+  orderConfirmationSmsText       String  @default("Hi {{customer_name}}, your order #{{order_number}} is confirmed!")
+  shippingConfirmationSmsEnabled Boolean @default(false)
+  shippingConfirmationSmsText    String  @default("Good news! Your order #{{order_number}} has shipped.")
+  outForDeliverySmsEnabled       Boolean @default(false)
+  outForDeliverySmsText          String  @default("Your order #{{order_number}} is out for delivery today.")
+  deliveryReminderDays           Int     @default(3)
+
+  // ---- Settings & Integrations > Visibility ----
+  formVisibility           String  @default("both") // disabled | cart_only | product_only | both
+  hideCheckoutOnCart       Boolean @default(false)
+  productClickBehavior     String  @default("buy_current_product") // buy_current_product | buy_all_cart
+  hideAddToCart            Boolean @default(false)
+  hideBuyNow               Boolean @default(false)
+  disableOnHomePage        Boolean @default(false)
+  disableOnCollectionPages Boolean @default(false)
+  specificProductsMode     String  @default("none") // none | only | exclude
+  specificProductIds       String? // comma-separated GIDs
+  specificCollectionsMode  String  @default("none") // none | only | exclude
+  specificCollectionIds    String? // comma-separated GIDs
+  allowedCountries         String? // comma-separated ISO codes, null = all
+  minOrderValue            Float?
+  maxOrderValue            Float?
+
+  // ---- Settings & Integrations > General ----
+  formVersion            String  @default("new") // new | legacy
+  multiStepEnabled        Boolean @default(false)
+  multiStepCount           Int     @default(2)
+  saveOrdersAsDraft        Boolean @default(true) // true = draftOrderCreate, false = orderCreate
+  saveUtmParams            Boolean @default(true)
+  addAppTag                Boolean @default(true)
+  redirectAfterPurchase    String  @default("default") // default | custom_link | whatsapp | custom_message
+  redirectCustomValue      String?
+  taxEnabled               Boolean @default(false)
+  taxRate                  Float   @default(0)
+  taxName                  String  @default("VAT")
+  taxAppliesTo             String  @default("all") // all | specific_collections
+  taxIncludedInPrice       Boolean @default(false)
+  customCss                String?
+
+  // ---- Settings & Integrations > Pixels ----
+  disableAllPixelEvents Boolean @default(false)
+
+  // ---- Settings & Integrations > Google Sheets ----
+  googleSheetsConnected Boolean @default(false)
+  googleSheetsEmail     String?
+
+  // ---- Settings & Integrations > Integrations ----
+  smsProviderName String? // e.g. "twilio", "msg91"
+  smsApiKey       String? // NOTE: production apps should use an encrypted
+                           // secret store, not a plaintext DB column
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bundles     BundleOffer[]
+  upsells     UpsellOffer[]
+  submissions CodSubmission[]
+  pixels      PixelIntegration[]
+}
+
+// --- Quantity / bundle offers shown inside the COD form (Sales Booster > Quantity Offers) ---
+model BundleOffer {
+  id             String       @id @default(cuid())
+  shopSettings   ShopSettings @relation(fields: [shopSettingsId], references: [id], onDelete: Cascade)
+  shopSettingsId String
+
+  title         String // e.g. "Buy 2 Save 10%"
+  productId     String // Shopify GID this offer applies to, or "all"
+  minQuantity   Int     @default(2)
+  discountType  String  @default("percentage") // percentage | fixed
+  discountValue Float   @default(10)
+  isActive      Boolean @default(true)
+  sortOrder     Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// --- Upsell / downsell offers (Sales Booster > Upsells & Downsells) ---
+model UpsellOffer {
+  id             String       @id @default(cuid())
+  shopSettings   ShopSettings @relation(fields: [shopSettingsId], references: [id], onDelete: Cascade)
+  shopSettingsId String
+
+  title            String
+  triggerProductId String // shown when this product is in the form
+  offerProductId   String // the product being offered
+  offerType        String  @default("upsell") // upsell | downsell
+  discountType     String  @default("percentage")
+  discountValue    Float   @default(10)
+  isActive         Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// --- One row per pixel/analytics integration a merchant wants fired on form actions ---
+model PixelIntegration {
+  id             String       @id @default(cuid())
+  shopSettings   ShopSettings @relation(fields: [shopSettingsId], references: [id], onDelete: Cascade)
+  shopSettingsId String
+
+  platform String // facebook | facebook_capi | google_ga4 | tiktok | tiktok_events_api | snapchat | pinterest | sharechat | taboola | kwai
+  label    String
+  pixelId  String
+
+  createdAt DateTime @default(now())
+}
+
+// --- Each COD form submission from the storefront, before it becomes a real order ---
+model CodSubmission {
+  id             String       @id @default(cuid())
+  shopSettings   ShopSettings @relation(fields: [shopSettingsId], references: [id], onDelete: Cascade)
+  shopSettingsId String
+
+  customerName String
+  phone        String
+  email        String?
+  address1     String
+  address2     String?
+  city         String
+  province     String?
+  zip          String?
+  country      String
+  ipAddress    String?
+
+  cartSnapshot  String  // JSON string: [{variantId, quantity, price, title}]
+  bundleApplied String? // BundleOffer id, if any
+  subtotal      Float
+  codFee        Float   @default(0)
+  taxAmount     Float   @default(0)
+  total         Float
+
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+
+  otpVerified Boolean @default(false)
+  otpCode     String?
+  // pending | verified | converted | out_for_delivery | delivered | returned | failed | abandoned | blocked
+  status         String  @default("pending")
+  shopifyOrderId String? // populated once converted to a real Shopify order/draft order
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
