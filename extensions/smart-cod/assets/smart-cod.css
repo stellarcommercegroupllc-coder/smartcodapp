@@ -1,0 +1,104 @@
+.smart-cod-form {
+  max-width: 480px;
+  margin: 24px 0;
+  padding: 20px;
+  border: 1px solid #e1e1e1;
+  border-radius: 12px;
+  font-family: inherit;
+}
+
+.smart-cod-form .rc-title {
+  margin: 0 0 16px;
+  font-size: 18px;
+}
+
+.smart-cod-form label {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: #444;
+}
+
+.smart-cod-form input {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.smart-cod-form .rc-row {
+  display: flex;
+  gap: 12px;
+}
+
+.smart-cod-form .rc-row label {
+  flex: 1;
+}
+
+.smart-cod-form .rc-summary {
+  margin: 12px 0;
+  font-size: 14px;
+}
+
+.smart-cod-form .rc-summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.smart-cod-form .rc-summary-total {
+  font-weight: 700;
+  border-top: 1px solid #e1e1e1;
+  margin-top: 4px;
+  padding-top: 8px;
+}
+
+.smart-cod-form #rc-savings {
+  color: #1a7f37;
+}
+
+.smart-cod-form .rc-tiers {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
+
+.smart-cod-form .rc-tier {
+  flex: 1;
+  min-width: 100px;
+  padding: 10px 8px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.smart-cod-form .rc-tier--active {
+  border-color: #1a1a1a;
+  border-width: 2px;
+  font-weight: 600;
+}
+
+.smart-cod-form .rc-submit-btn,
+.smart-cod-form #rc-verify-otp-btn {
+  width: 100%;
+  padding: 14px;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.smart-cod-form #rc-message {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #333;
+}

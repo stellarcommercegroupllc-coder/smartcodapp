@@ -1,0 +1,105 @@
+{% comment %}
+  Renders the Cash on Delivery order form.
+  This is a THEME APP EMBED (target: body) — merchants turn it on once via
+  Online Store > Themes > Customize > App embeds > "Smart COD",
+  rather than adding a block to each template individually. Because it's
+  injected globally, we use `template.name` to only render real content on
+  product/cart pages.
+{% endcomment %}
+
+{% if template.name == 'product' %}
+<div
+  id="smart-cod-form-root"
+  class="smart-cod-form"
+  data-product-id="{{ product.id | default: '' }}"
+  data-variant-id="{{ product.selected_or_first_available_variant.id | default: '' }}"
+  data-price="{{ product.selected_or_first_available_variant.price | default: 0 }}"
+  data-app-proxy-url="/apps/cod"
+>
+  <form id="smart-cod-form">
+    <h3 class="rc-title">{{ block.settings.form_title | default: "Order Cash on Delivery" }}</h3>
+
+    <label>Full name
+      <input type="text" name="customerName" required />
+    </label>
+
+    <label>Phone number
+      <input type="tel" name="phone" required />
+    </label>
+
+    <label>Address
+      <input type="text" name="address1" required />
+    </label>
+
+    <div class="rc-row">
+      <label>City
+        <input type="text" name="city" required />
+      </label>
+      <label>ZIP / Postal code
+        <input type="text" name="zip" />
+      </label>
+    </div>
+
+    <label>Country
+      <input type="text" name="country" required />
+    </label>
+
+    <div id="rc-bundle-offers"></div>
+
+    <div class="rc-summary">
+      <div class="rc-summary-row">
+        <span>Subtotal</span><span id="rc-subtotal">-</span>
+      </div>
+      <div class="rc-summary-row" id="rc-savings-row" style="display:none;">
+        <span>Bundle savings</span><span id="rc-savings">-</span>
+      </div>
+      <div class="rc-summary-row rc-summary-total">
+        <span>Total</span><span id="rc-total">-</span>
+      </div>
+    </div>
+
+    <button type="submit" class="rc-submit-btn" style="background:{{ block.settings.button_color | default: '#1a1a1a' }}">
+      {{ block.settings.button_text | default: "Confirm Cash on Delivery Order" }}
+    </button>
+
+    <div id="rc-otp-section" style="display:none;">
+      <label>Enter the code sent to your phone
+        <input type="text" name="otpCode" />
+      </label>
+      <button type="button" id="rc-verify-otp-btn">Verify &amp; place order</button>
+    </div>
+
+    <div id="rc-message"></div>
+  </form>
+</div>
+
+{{ 'smart-cod.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'smart-cod.js' | asset_url }}" defer></script>
+{% endif %}
+
+{% comment %} Cart page support is client-side only for now — see cod-form.js {% endcomment %}
+{% if template.name == 'cart' %}
+<div
+  id="smart-cod-form-root-cart"
+  class="smart-cod-form"
+  data-app-proxy-url="/apps/cod"
+  data-context="cart"
+>
+  {% comment %} Populated by cod-form.js reading the cart via /cart.js {% endcomment %}
+</div>
+{{ 'smart-cod.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'smart-cod.js' | asset_url }}" defer></script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Smart COD",
+  "target": "body",
+  "settings": [
+    { "type": "text", "id": "form_title", "label": "Form title", "default": "Order Cash on Delivery" },
+    { "type": "text", "id": "button_text", "label": "Button text", "default": "Confirm Cash on Delivery Order" },
+    { "type": "color", "id": "button_color", "label": "Button color", "default": "#1a1a1a" }
+  ]
+}
+{% endschema %}
+
